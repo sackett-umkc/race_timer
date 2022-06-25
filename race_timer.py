@@ -16,13 +16,19 @@ import matplotlib.pyplot as plt
 #pi imports
 import RPi.GPIO as GPIO
 
+#initialize inputs
+START_LINE_PIN = 18
+FINISH_LINE_PIN = 17
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(START_LINE_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(FINISH_LINE_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+
 #initialize plot
 plot_data=[]
 plot_labels=[]
 plt.ion()
 fig,ax=plt.subplots()
 plt.grid(True)
-
 
 #set the file name
 #output_folder=r'C:\Users\tksac\OneDrive\Documents\AppliedExpDes\NewMaterial'
@@ -56,49 +62,22 @@ while True:    # infinite loop
         user_input = input("Continue Y/N?")
         if user_input.lower() == "n":
             break  # stops the loop
-    
-#----using optical sensors----#
-    START_LINE_PIN = 17
-    FINISH_LINE_PIN = 18
-    def break_beam_callback(channel,first_start):
-        if GPIO.input(START_LINE_PIN):
-            print("start beam unbroken")
-            if first_start==True:
-                first_start=False
-                start_time=time.perf_counter()
-        else:
-            print("start beam broken")
-        return start_time
-    GPIO.setmode(GPIO.BCM)
-    GPIO.setup(START_LINE_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-    GPIO.add_event_detect(START_LINE_PIN, GPIO.BOTH, callback=break_beam_callback)
 
-    def break_beam_callback(channel):
-        if GPIO.input(FINISH_LINE_PIN):
-            print("finish beam unbroken")
-        else:
-            print("finish beam broken")
-            if first_finish==True:
-                first_finish=False
-                end_time=time.perf_counter()
-    GPIO.setmode(GPIO.BCM)
-    GPIO.setup(FINISH_LINE_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-    GPIO.add_event_detect(FINISH_LINE_PIN, GPIO.BOTH, callback=break_beam_callback)
-
-    #message = input("Press enter to quit\n\n")
-
-        
-#----simulate using keyboard----#
+#----lap time----#
     newlist=[]
     model=input("Enter the make/model or the configuration ID:").lower()
     newlist.append(model)
     startevent=input("Press enter when car is in start position:")
-    print("Ready to record data...")
+    sensor_start=GPIO.wait_for_edge(START_LINE_PIN,GPIO.RISING)
+    #print("Ready to record data...")
+    print("start triggered")
     #sensor_start=input("Press enter to simulate start line")
-    #start_time=time.perf_counter()
+    start_time=time.perf_counter()
     newlist.append(start_time)
-    sensor_end=input("Press enter to simulate finish line")
-    #end_time=time.perf_counter()
+    #sensor_end=input("Press enter to simulate finish line")
+    sensor_end=GPIO.wait_for_edge(FINISH_LINE_PIN,GPIO.FALLING)
+    print("finish triggered")
+    end_time=time.perf_counter()
     newlist.append(end_time)
     track_time=(end_time-start_time)
     newlist.append(track_time)
@@ -106,7 +85,6 @@ while True:    # infinite loop
     print(f"Start time={start_time}")
     print(f"Finish time={end_time}")
     print(f"Configuration:{model}, trial time:{track_time} seconds")
-    print("End of line")
     #write to csv
     with open(output_name, 'a', newline='') as f:  
         writer = csv.writer(f)
