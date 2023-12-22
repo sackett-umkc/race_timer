@@ -26,7 +26,7 @@ plt.grid(True)
 
 
 #set the file name
-output_folder=r'C:\Users\tksac\OneDrive\Documents\AppliedExpDes\NewMaterial'
+output_folder='./OutputData'
 output_file='lap_times.csv'
 output_name=output_folder+'/'+output_file
 
